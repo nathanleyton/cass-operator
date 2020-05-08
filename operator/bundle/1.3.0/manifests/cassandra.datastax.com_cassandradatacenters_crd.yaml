@@ -48,12 +48,6 @@ spec:
               description: Indicates that configuration and container image changes
                 should only be pushed to the first rack of the datacenter
               type: boolean
-            canaryUpgradeCount:
-              description: The number of nodes that will be updated when CanaryUpgrade
-                is true. Note that the value is either 0 or greater than the rack
-                size, then all nodes in the rack will get updated.
-              format: int32
-              type: integer
             clusterName:
               description: The name by which CQL clients and instances will know the
                 cluster. If the same cluster name is shared by multiple Datacenters
@@ -64,36 +58,6 @@ spec:
             configBuilderImage:
               description: Container image for the config builder init container.
               type: string
-            configBuilderResources:
-              description: Kubernetes resource requests and limits per server config
-                initialization container.
-              properties:
-                limits:
-                  additionalProperties:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                  description: 'Limits describes the maximum amount of compute resources
-                    allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
-                  type: object
-                requests:
-                  additionalProperties:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                  description: 'Requests describes the minimum amount of compute resources
-                    required. If Requests is omitted for a container, it defaults
-                    to Limits if that is explicitly specified, otherwise to an implementation-defined
-                    value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
-                  type: object
-              type: object
-            dockerImageRunsAsCassandra:
-              description: Does the Server Docker image run as the Cassandra user?
-              type: boolean
             dseWorkloads:
               properties:
                 analyticsEnabled:
@@ -126,22 +90,6 @@ spec:
                   required:
                   - clientSecretName
                   - serverSecretName
-                  type: object
-              type: object
-            networking:
-              properties:
-                hostNetwork:
-                  type: boolean
-                nodePort:
-                  properties:
-                    internode:
-                      type: integer
-                    internodeSSL:
-                      type: integer
-                    native:
-                      type: integer
-                    nativeSSL:
-                      type: integer
                   type: object
               type: object
             nodeSelector:
@@ -1378,10 +1326,6 @@ spec:
                               - containerPort
                               type: object
                             type: array
-                            x-kubernetes-list-map-keys:
-                            - containerPort
-                            - protocol
-                            x-kubernetes-list-type: map
                           readinessProbe:
                             description: 'Periodic probe of container service readiness.
                               Container will be removed from service endpoints if
@@ -3710,10 +3654,6 @@ spec:
                               - containerPort
                               type: object
                             type: array
-                            x-kubernetes-list-map-keys:
-                            - containerPort
-                            - protocol
-                            x-kubernetes-list-type: map
                           readinessProbe:
                             description: 'Periodic probe of container service readiness.
                               Container will be removed from service endpoints if
@@ -4644,10 +4584,6 @@ spec:
                         - whenUnsatisfiable
                         type: object
                       type: array
-                      x-kubernetes-list-map-keys:
-                      - topologyKey
-                      - whenUnsatisfiable
-                      x-kubernetes-list-type: map
                     volumes:
                       description: 'List of volumes that can be mounted by containers
                         belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes'
@@ -5957,33 +5893,6 @@ spec:
                   description: PullPolicy describes a policy for if/when to pull a
                     container image
                   type: string
-                resources:
-                  description: Kubernetes resource requests and limits per reaper
-                    container.
-                  properties:
-                    limits:
-                      additionalProperties:
-                        anyOf:
-                        - type: integer
-                        - type: string
-                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                        x-kubernetes-int-or-string: true
-                      description: 'Limits describes the maximum amount of compute
-                        resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
-                      type: object
-                    requests:
-                      additionalProperties:
-                        anyOf:
-                        - type: integer
-                        - type: string
-                        pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                        x-kubernetes-int-or-string: true
-                      description: 'Requests describes the minimum amount of compute
-                        resources required. If Requests is omitted for a container,
-                        it defaults to Limits if that is explicitly specified, otherwise
-                        to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
-                      type: object
-                  type: object
               type: object
             replaceNodes:
               description: A list of pod names that need to be replaced.
@@ -6032,7 +5941,11 @@ spec:
             serverVersion:
               description: Version string for config builder, used to generate Cassandra
                 server configuration
-              pattern: (6\.8\.\d+)|(3\.11\.\d+)|(4\.0\.\d+)
+              enum:
+              - 6.8.0
+              - 6.8.1
+              - 3.11.6
+              - 4.0.0
               type: string
             serviceAccount:
               description: The k8s service account to use for the server pods
@@ -6180,33 +6093,6 @@ spec:
               description: This secret defines the username and password for the Cassandra
                 server superuser. If it is omitted, we will generate a secret instead.
               type: string
-            systemLoggerResources:
-              description: Kubernetes resource requests and limits per system logger
-                container.
-              properties:
-                limits:
-                  additionalProperties:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                  description: 'Limits describes the maximum amount of compute resources
-                    allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
-                  type: object
-                requests:
-                  additionalProperties:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                    x-kubernetes-int-or-string: true
-                  description: 'Requests describes the minimum amount of compute resources
-                    required. If Requests is omitted for a container, it defaults
-                    to Limits if that is explicitly specified, otherwise to an implementation-defined
-                    value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
-                  type: object
-              type: object
             users:
               description: Cassandra users to bootstrap
               items:
@@ -6267,12 +6153,6 @@ spec:
                     type: string
                 type: object
               type: object
-            observedGeneration:
-              format: int64
-              type: integer
-            quietPeriod:
-              format: date-time
-              type: string
             superUserUpserted:
               description: Deprecated. Use usersUpserted instead. The timestamp at
                 which CQL superuser credentials were last upserted to the management
